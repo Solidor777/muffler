@@ -26,7 +26,9 @@ a WebSocket the Foundry clients connect to.
 - **Self-exclusion:** a per-user toggle (on/off) plus an optional own Discord ID. When on, the
   local user's own Discord ID resolves as: client setting → GM mapping (`game.user.id` →
   Discord ID) → unresolved. Unresolved (or toggle off) means "duck on everyone."
-- **Ducked channels:** music + environment buses (not interface), non-destructive.
+- **Ducked channels:** music + environment buses (not interface). Applied as a transient
+  gain on the audio graph — **disconnect-safe**: never written to the user's saved volume
+  settings, so a mid-duck disconnect leaves nothing permanently lowered.
 - **Ducking defaults:** target 20% while others talk; attack 150 ms, release 800 ms, hold
   300 ms after the last "quiet".
 - **Bot/Foundry decoupling:** the bot knows nothing about Foundry; it only relays Discord
@@ -98,10 +100,16 @@ One process runs the Discord bot and the WS relay.
 
 - **`duck/engine.js`:** on `duck=true`, ramps the music + environment buses toward the target
   over the attack time; on `duck=false`, holds, then ramps back over the release time.
-  Non-destructive: it does not write the user's saved global-volume settings.
-  - Implementation note for planning: confirm the v14 `game.audio` mechanism for a temporary,
-    non-persisted attenuation of the music/ambient buses (gain multiplier on the AudioContext
-    buses vs. lowering and restoring the global volumes).
+  Non-destructive and **disconnect-safe**: ducking is a transient gain Muffler controls on the
+  audio output graph (a Muffler-owned gain node or runtime multiplier on the bus), never a
+  write to the user's saved global-volume settings. If the client disconnects or the session
+  ends mid-duck, nothing is persisted — the next session starts at full volume. The
+  persist-and-restore approach (lowering then restoring the saved global volumes) is
+  **rejected**: a mid-duck disconnect would leave the volume permanently lowered.
+  - Implementation note (resolved by the `game.audio` spike before build): where to
+    insert/control the transient gain on the v14 music/environment buses, how to ramp it
+    smoothly (e.g. `GainNode.gain.setTargetAtTime`), and how to cleanly remove it (restore
+    gain to unity) on disable/teardown.
 
 ## Settings
 
