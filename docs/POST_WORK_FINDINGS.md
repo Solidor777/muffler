@@ -3,16 +3,18 @@
 Living record of post-work review issues, gotchas, and things that deserve attention.
 Not a to-do list.
 
-## Not yet verified live (build complete, unit-tested only)
+## Verified live
 
-Muffler was just created while Foundry was already running, so the server has not scanned the
-new module. To verify in-app: restart Foundry (so it detects `modules/muffler`), enable
-Muffler in the world, then reload. Two paths remain unverified against a live instance:
+The duck path is verified end-to-end against a running v14 world by `test/e2e/duck.spec.js`:
+a mock relay drives speaking/quiet, and the real `game.audio.music` + `environment` buses
+duck and restore. This confirms the relay client, self-exclusion resolve, settings wiring,
+and the disconnect-safe `game.audio` gain mechanism work live.
 
-- **Foundry-coupled glue:** the `game.audio` ducking, the `MappingMenu` render-override shim
-  (a settings menu whose `render()` opens a DialogV2 instead of an app frame), and the
-  settings registration. The duck e2e (`test/e2e/duck.spec.js`) drives a mock relay against
-  the real `game.audio` buses and is ready to run once the module is enabled.
+## Still verified manually only
+
+- **`MappingMenu` settings menu:** the render-override shim (a settings menu whose `render()`
+  opens a DialogV2 instead of an app frame) is not exercised by the e2e — confirm on first GM
+  use.
 - **Bot ↔ Discord:** requires a Discord application + bot token and a voice channel; tested
   manually per `bot/README.md`. The relay's pure logic has unit coverage (21 tests).
 
