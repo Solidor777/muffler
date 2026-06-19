@@ -12,6 +12,7 @@
       "name": "Justin Tarquin"
     }
   ],
+  "license": "MIT",
   "esmodules": ["dist/muffler.mjs"],
   "styles": ["dist/muffler.css"],
   "languages": [
