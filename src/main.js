@@ -1,43 +1,35 @@
 import { registerSettings } from "./settings.js";
 import { RelayClient } from "./relay/client.js";
 import { DuckEngine } from "./duck/engine.js";
-import { resolveOwnDiscordId, shouldDuck } from "./duck/resolve.js";
+import { DuckController } from "./duck/controller.js";
 import { openMappingDialog } from "./apps/mappingApp.js";
 import { logger } from "./logger.js";
 import "./styles/muffler.scss";
 
 const MODULE_ID = "muffler";
 
-// Set of currently-speaking Discord user IDs reported by the relay.
-const speaking = new Set();
 /** @type {DuckEngine|null} */
 let engine = null;
 /** @type {RelayClient|null} */
 let client = null;
+/** @type {DuckController|null} */
+let controller = null;
 
 /**
- * Recomputes and applies the duck state from the current speaking set and self-exclusion.
- * @returns {void}
- */
-function recompute() {
-  engine?.setDucked(shouldDuck(speaking, resolveOwnDiscordId()));
-}
-
-/**
- * Tears down any active relay connection and duck engine and clears speaking state.
+ * Tears down any active relay connection, controller, and duck engine.
  * @returns {void}
  */
 function stopDucking() {
   client?.disconnect();
   client = null;
+  controller = null;
   engine?.stop();
   engine = null;
-  speaking.clear();
 }
 
 /**
  * Starts (or restarts) the relay connection and duck engine from current settings. No-op when
- * disabled or when no relay URL is configured.
+ * disabled or when no relay URL is configured. Releases the duck and notifies on disconnect.
  * @returns {void}
  */
 function startDucking() {
@@ -52,18 +44,21 @@ function startDucking() {
   }
   engine = new DuckEngine();
   engine.start();
+  controller = new DuckController(engine);
   client = new RelayClient({
     url,
     token: game.settings.get(MODULE_ID, "relayToken"),
-    onSpeaking: (id) => {
-      speaking.add(id);
-      recompute();
+    onSpeaking: (id) => controller.onSpeaking(id),
+    onQuiet: (id) => controller.onQuiet(id),
+    onStatus: (status) => {
+      logger.info(`Relay ${status}.`);
+      if (status === "connected") {
+        ui.notifications.info("Muffler: relay connected.");
+      } else {
+        ui.notifications.warn("Muffler: relay disconnected.");
+        controller?.reset();
+      }
     },
-    onQuiet: (id) => {
-      speaking.delete(id);
-      recompute();
-    },
-    onStatus: (status) => logger.info(`Relay ${status}.`),
   });
   client.connect();
 }
