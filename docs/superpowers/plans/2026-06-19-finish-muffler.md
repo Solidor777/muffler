@@ -33,11 +33,13 @@
 ### Task 1: Extract a testable DuckController and release on disconnect
 
 **Files:**
+
 - Create: `src/duck/controller.js`
 - Modify: `src/main.js`
 - Test: `test/unit/controller.test.js`
 
 **Interfaces:**
+
 - Consumes: `shouldDuck`, `resolveOwnDiscordId` from `src/duck/resolve.js`; a `DuckEngine` with `setDucked(boolean)`.
 - Produces: `class DuckController { constructor(engine); onSpeaking(userId: string): void; onQuiet(userId: string): void; reset(): void }`.
 
@@ -212,11 +214,13 @@ git commit -m "Extract DuckController; release duck and notify on relay disconne
 ### Task 2: Bot — clear speaking state on leave and voice disconnect
 
 **Files:**
+
 - Modify: `bot/src/relay.js`
 - Modify: `bot/src/bot.js`
 - Test: `bot/test/relay.test.js`
 
 **Interfaces:**
+
 - Produces: `RelayHandle.reset(): void` — broadcasts `{type:"quiet",userId}` for every speaking user, then clears the set.
 
 - [ ] **Step 1: Write the failing test (append to `bot/test/relay.test.js`)**
@@ -313,6 +317,7 @@ git -C .. commit -m "Bot: clear speaking state on leave and voice disconnect"
 ### Task 3: Bot — restrict /muffler to channel managers
 
 **Files:**
+
 - Modify: `bot/src/bot.js`
 
 **Interfaces:** none new.
@@ -327,8 +332,8 @@ import { Client, GatewayIntentBits, PermissionFlagsBits, REST, Routes, SlashComm
 const mufflerCommand = new SlashCommandBuilder()
   .setName("muffler")
   .setDescription("Controls Muffler voice channel connection.")
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
-  // …existing subcommands…
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels);
+// …existing subcommands…
 ```
 
 (Correct casing: `.setDescription`.)
@@ -349,6 +354,7 @@ git -C .. commit -am "Bot: restrict /muffler commands to channel managers"
 ### Task 4: Live e2e — self-exclusion
 
 **Files:**
+
 - Create: `test/e2e/self-exclude.spec.js`
 
 **Interfaces:** drives `game.modules.get("muffler").api.startDucking()` against a mock relay, as in `test/e2e/duck.spec.js`.
@@ -356,6 +362,7 @@ git -C .. commit -am "Bot: restrict /muffler commands to channel managers"
 - [ ] **Step 1: Write the e2e**
 
 Reuse the mock-relay + `joinReadyUnlock` pattern from `test/e2e/duck.spec.js`. Configure `selfExclude=true`, `ownDiscordId="self-1"`, set core volumes to 1. Then:
+
 - broadcast `{type:"speaking",userId:"self-1"}` → assert `game.audio.music.gainNode.gain.value` stays `> 0.8` (no duck for self).
 - broadcast `{type:"speaking",userId:"other-1"}` → after 700 ms assert `< 0.5` (ducked by another).
 - broadcast quiet for both → after 2500 ms assert `> 0.8` (restored).
@@ -379,6 +386,7 @@ git commit -m "Add live e2e for self-exclusion"
 ### Task 5: Live e2e — GM mapping editor
 
 **Files:**
+
 - Create: `test/e2e/mapping.spec.js`
 
 - [ ] **Step 1: Write the e2e**
@@ -416,6 +424,7 @@ git commit -m "Add live e2e for the GM mapping editor"
 ### Task 6: Packaging — module README and manifest links
 
 **Files:**
+
 - Create: `README.md` (repo root)
 - Modify: `module.json`
 
@@ -439,6 +448,7 @@ git commit -m "Add module README and manifest metadata"
 ### Task 7: Manual bot↔Discord smoke verification
 
 **Files:**
+
 - Create: `docs/VERIFICATION.md`
 
 - [ ] **Step 1: Write the checklist**
