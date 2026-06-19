@@ -15,7 +15,7 @@
  * frames, which in turn triggers the 'end' event reliably.
  */
 
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, PermissionFlagsBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { joinVoiceChannel, VoiceConnectionStatus, entersState } from '@discordjs/voice';
 
 /** @typedef {import('./relay.js').RelayHandle} RelayHandle */
@@ -25,6 +25,7 @@ import { joinVoiceChannel, VoiceConnectionStatus, entersState } from '@discordjs
 const mufflerCommand = new SlashCommandBuilder()
     .setName('muffler')
     .setDescription('Controls Muffler voice channel connection.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
     .addSubcommand((sub) =>
         sub
             .setName('join')
@@ -116,6 +117,24 @@ export async function startBot(config, relay) {
                 return;
             }
 
+            // Handle voice drops: try to recover briefly, otherwise tear down and clear state
+            // so connected clients release any active duck.
+            const connection = activeConnection;
+            connection.on(VoiceConnectionStatus.Disconnected, async () => {
+                try {
+                    await Promise.race([
+                        entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                        entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+                    ]);
+                } catch {
+                    connection.destroy();
+                    if (activeConnection === connection) {
+                        activeConnection = null;
+                    }
+                    relay.reset();
+                }
+            });
+
             const { receiver } = activeConnection;
 
             receiver.speaking.on('start', (userId) => {
@@ -148,6 +167,7 @@ export async function startBot(config, relay) {
 
             activeConnection.destroy();
             activeConnection = null;
+            relay.reset();
             await interaction.reply({ content: 'Left the voice channel.', ephemeral: true });
         }
     });

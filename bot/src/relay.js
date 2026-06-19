@@ -18,6 +18,9 @@ import { URL } from 'url';
  *   Updates speaking state for a user and broadcasts the change if state actually changed.
  * @property {(msg: string) => void} broadcast
  *   Sends a raw JSON string to all currently authorized and connected clients.
+ * @property {() => void} reset
+ *   Broadcasts a quiet event for every speaking user and clears the set, so clients release
+ *   any active duck (used when the bot leaves a channel or the voice connection drops).
  * @property {() => void} close
  *   Shuts down the WebSocket server.
  * @property {Set<string>} speakingUsers
@@ -174,9 +177,24 @@ export function createRelay({ port, token }) {
         console.log(`[relay] WebSocket relay listening on port ${port}.`);
     });
 
+    /**
+     * Broadcasts a quiet event for every currently-speaking user, then clears the set, so
+     * connected clients release any active duck. Used when the bot leaves a channel or the
+     * voice connection drops without per-user 'end' events.
+     *
+     * @returns {void}
+     */
+    function reset() {
+        for (const userId of speakingUsers) {
+            broadcast(JSON.stringify({ type: 'quiet', userId }));
+        }
+        speakingUsers.clear();
+    }
+
     return {
         setSpeaking,
         broadcast,
+        reset,
         /** Closes the WebSocket server and releases the port. */
         close: () => wss.close(),
         speakingUsers,
