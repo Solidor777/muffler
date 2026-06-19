@@ -1,0 +1,13 @@
+// Custom styling for Muffler dialogs. Scoped under the .muffler-mapping root class; no :global selectors.
+.muffler-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .muffler-mapping__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+}

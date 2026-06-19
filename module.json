@@ -1,0 +1,24 @@
+{
+  "id": "muffler",
+  "title": "Muffler",
+  "description": "Ducks Foundry audio while others speak in a Discord voice channel, via a self-hosted bot relay.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "Justin Tarquin"
+    }
+  ],
+  "esmodules": ["dist/muffler.mjs"],
+  "styles": ["dist/muffler.css"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
+}

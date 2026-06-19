@@ -1,0 +1,19 @@
+{
+  "name": "muffler-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Discord bot that relays per-user voice speaking state over WebSocket to Foundry VTT clients.",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "@discordjs/voice": "^0.18.0",
+    "ws": "^8.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.0"
+  }
+}
